@@ -25,7 +25,7 @@ def _spliter(command: str):
     return new_command
 
 
-def _splitCommand(command: str):
+def splitCommand(command: str):
     commandArguments = _spliter(command)
     if commandArguments is None:
         return None, f"命令处理出错：“`”不为偶数。"

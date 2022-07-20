@@ -1,8 +1,28 @@
-import os.path
+import requests
+from settings import HTTP_PORT, HTTP_HOST
 
-from settings import PATH
 
-statics = os.path.join(PATH, "python_plugins/statics")
+def sendGroupMessage(groupID: int, msg: str, rawContent: bool = False) -> None:
+    requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/send_group_msg",
+        data={
+            "group_id": groupID,
+            "auto_escape": rawContent,
+            "message": msg
+        }
+    )
+
+
+def sendPrivateMessage(groupID: int, toUser: int, msg: str, rawContent: bool = False) -> None:
+    requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/send_private_msg",
+        data={
+            "group_id": groupID,
+            "user_id": toUser,
+            "auto_escape": rawContent,
+            "message": msg
+        }
+    )
 
 
 def at(user_id: int) -> str:
@@ -39,7 +59,7 @@ def image(url: str, ID: int = 40000, subType: int = 0) -> str:
     return f"[CQ:image,url={url},type=show,id={ID},subType={subType}]"
 
 
-def imageByFile(fileName: str, ID: int = 40000, subType: int = 0) -> str:
+def imageByFile(filePath: str, ID: int = 40000, subType: int = 0) -> str:
     """ id	    类型
         40000	普通
         40001	幻影
@@ -62,7 +82,7 @@ def imageByFile(fileName: str, ID: int = 40000, subType: int = 0) -> str:
         10	有待测试
         13	热搜图
     """
-    return f"[CQ:image,file={os.path.join(statics, fileName)},type=show,id={ID},subType={subType}]"
+    return f"[CQ:image,file={filePath},type=show,id={ID},subType={subType}]"
 
 
 def record(url: str, magic: bool = False) -> str:
