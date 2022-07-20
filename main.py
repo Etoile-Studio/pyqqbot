@@ -6,11 +6,11 @@ import subprocess
 import threading
 import time
 import websockets
-from settings import PATH, WEBSOCKET_HOST, WEBSOCKET_PORT, QQ_ID, GROUP_ID, LOGGER
+from settings import PATH, WEBSOCKET_HOST, WEBSOCKET_PORT, QQ_ID, GROUP_ID, LOGGER, BOT_PATH
 from API import actions
 import manager
 
-proc = subprocess.Popen(args="go-cqhttp.exe -faststart", shell=True, cwd=os.path.join(PATH, "bot"),
+proc = subprocess.Popen(args="go-cqhttp.exe -faststart", shell=True, cwd=BOT_PATH,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 

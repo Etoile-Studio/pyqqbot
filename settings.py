@@ -4,13 +4,13 @@ import os
 # path
 PATH = os.path.abspath(os.path.dirname(__file__))
 PLUGIN_PATH = os.path.join(PATH, "plugins")
+BOT_PATH = os.path.join(PATH, "bot")
 PLUGIN_PACKAGE = "plugins"
 PATH_BLACKLIST = ["__init__.py", "__pycache__"]
 
 # qq config
 QQ_ID = 1726237584
 GROUP_ID = [678414652]
-ALLOW_PRIVATE_MSG = True
 
 # api location
 WEBSOCKET_HOST = HTTP_HOST = "localhost"
