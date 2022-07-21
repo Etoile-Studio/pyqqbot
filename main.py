@@ -6,7 +6,7 @@ import subprocess
 import threading
 import time
 import websockets
-from settings import PATH, WEBSOCKET_HOST, WEBSOCKET_PORT, QQ_ID, GROUP_ID, LOGGER, BOT_PATH
+from settings import WEBSOCKET_HOST, WEBSOCKET_PORT, QQ_ID, GROUP_ID, LOGGER, BOT_PATH
 from API import actions
 import manager
 
