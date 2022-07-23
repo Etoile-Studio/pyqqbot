@@ -4,7 +4,7 @@ import time
 from importlib import import_module
 from settings import PLUGIN_PATH, PLUGIN_PACKAGE, LOGGER, PLUGIN_LIST
 from API.plugin import Plugin
-from API.libs import removeMiscPath, getClasses
+from API.misc import removeMiscPath, getClasses
 from command_spilter import splitCommand
 
 plugins = PLUGIN_LIST
@@ -27,14 +27,22 @@ def loadPlugins():
                     name = plugin_class().getName()
                     if plugin_class.on_group_add_request != Plugin.on_group_add_request:
                         plugins["on_group_add_request"].append(plugin_class().on_group_add_request)
+
                     if plugin_class.on_group_member_add != Plugin.on_group_member_add:
                         plugins["on_group_member_add"].append(plugin_class().on_group_member_add)
+
+                    if plugin_class.on_group_member_leave != Plugin.on_group_member_leave:
+                        plugins["on_group_member_leave"].append(plugin_class().on_group_member_leave)
+
                     if plugin_class.on_group_file != Plugin.on_group_file:
                         plugins["on_group_file"].append(plugin_class().on_group_file)
+
                     if plugin_class.on_group_message != Plugin.on_group_message:
                         plugins["on_group_message"].append(plugin_class().on_group_message)
-                    if plugin_class.on_private_message != Plugin.on_private_message:
-                        plugins["on_private_message"].append(plugin_class().on_private_message)
+
+                    if plugin_class.on_group_anonymous_message != Plugin.on_group_anonymous_message:
+                        plugins["on_group_anonymous_message"].append(plugin_class().on_group_anonymous_message)
+
                     if plugin_class.on_command != Plugin.on_command:
                         flag = True
                         for plug in plugins["on_command"]:
@@ -80,6 +88,8 @@ def executeEvent(eventType, fullEvent):
             args = (fullEvent["user_id"], fullEvent)
         case "on_group_add_request":
             args = (fullEvent["comment"], fullEvent["flag"], fullEvent)
+        case "on_group_anonymous_message":
+            args = (fullEvent["raw_message"], fullEvent)
     if not args:
         LOGGER.info("暂不支持此event")
         return

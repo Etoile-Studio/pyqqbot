@@ -1,30 +1,31 @@
 import asyncio
 import json
-import os
 import signal
 import subprocess
 import threading
 import time
 import websockets
 from settings import WEBSOCKET_HOST, WEBSOCKET_PORT, QQ_ID, GROUP_ID, LOGGER, BOT_PATH
-from API import actions
+from API.actions.group.message import sendGroupMessage
+from API.actions.private.message import sendPrivateMessage
+from API.actions import cqcode
 import manager
 
-proc = subprocess.Popen(args="go-cqhttp.exe -faststart", shell=True, cwd=BOT_PATH,
+proc = subprocess.Popen(args="./go-cqhttp -faststart", shell=True, cwd=BOT_PATH,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def returnCommandResultGroup(rawMessage, event):
     result = manager.executeCommand(rawMessage, event)
     if result is not None:
-        actions.sendGroupMessage(event["group_id"], actions.at(
+        sendGroupMessage(event["group_id"], cqcode.at(
             event["user_id"]) + " " + result)
 
 
 def returnCommandResultPrivate(rawMessage, event):
     result = manager.executeCommand(rawMessage, event)
     if result is not None:
-        actions.sendPrivateMessage(event["group_id"], event["user_id"], actions.at(
+        sendPrivateMessage(event["group_id"], event["user_id"], cqcode.at(
             event["user_id"]) + " " + result)
 
 
@@ -76,8 +77,11 @@ async def manage():
                                 # 来自群的消息
                                 case "group":
                                     if event["group_id"] in GROUP_ID:
-                                        if rawMessage.find(f"[CQ:at,qq={QQ_ID}]") == 0:
-                                            rawMessage = rawMessage.lstrip(actions.at(QQ_ID))
+                                        if event["anonymous"] is not None:
+                                            threading.Thread(target=manager.executeEvent,
+                                                             args=("on_group_anonymous_message", event)).start()
+                                        if rawMessage.find(cqcode.at(QQ_ID)) == 0:
+                                            rawMessage = rawMessage.lstrip(cqcode.at(QQ_ID))
                                             threading.Thread(target=returnCommandResultGroup,
                                                              args=(rawMessage, event)).start()
                                             continue

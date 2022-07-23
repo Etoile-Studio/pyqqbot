@@ -29,5 +29,6 @@ PLUGIN_LIST = {
     "on_group_file": [],
     "on_group_member_add": [],
     "on_group_add_request": [],
-    "on_group_member_leave": []
+    "on_group_member_leave": [],
+    "on_group_anonymous_message": []
 }

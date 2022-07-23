@@ -1,30 +1,3 @@
-import requests
-from settings import HTTP_PORT, HTTP_HOST
-
-
-def sendGroupMessage(groupID: int, msg: str, rawContent: bool = False) -> None:
-    requests.post(
-        f"http://{HTTP_HOST}:{HTTP_PORT}/send_group_msg",
-        data={
-            "group_id": groupID,
-            "auto_escape": rawContent,
-            "message": msg
-        }
-    )
-
-
-def sendPrivateMessage(groupID: int, toUser: int, msg: str, rawContent: bool = False) -> None:
-    requests.post(
-        f"http://{HTTP_HOST}:{HTTP_PORT}/send_private_msg",
-        data={
-            "group_id": groupID,
-            "user_id": toUser,
-            "auto_escape": rawContent,
-            "message": msg
-        }
-    )
-
-
 def at(user_id: int) -> str:
     return f"[CQ:at,qq={user_id}]"
 
@@ -103,5 +76,5 @@ def shareUrl(url: str, title: str) -> str:
     return f"[CQ:share,url={url},title={title}]"
 
 
-def voice(msg: str) -> str:
+def voiceToText(msg: str) -> str:
     return f"[CQ:tts,text={msg}]"

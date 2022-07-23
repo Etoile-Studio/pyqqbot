@@ -35,6 +35,7 @@ class Plugin:
     """
     所有plugin的父类，必须extend才会被识别
     """
+
     def __init__(self, name):
         """
         :param name: plugin的命名（只有在此插件有command时才重要，但必须填）
@@ -57,6 +58,16 @@ class Plugin:
         """
         当收到群消息时执行（命令除外）\n
         :param raw_message: cq码格式数据
+        :param fullEvent: 完整的事件参数，见官方文档 https://docs.go-cqhttp.org/event/#%E7%BE%A4%E6%B6%88%E6%81%AF
+        :return: str格式的返回文本或None（如果你不想用默认的消息返回或没有返回消息）
+        """
+        ...
+
+    def on_group_anonymous_message(self, raw_message, sender, fullEvent):
+        """
+        当收到群匿名消息时执行（命令除外）\n
+        :param raw_message: cq码格式数据
+        :param sender: 匿名消息的发送者
         :param fullEvent: 完整的事件参数，见官方文档 https://docs.go-cqhttp.org/event/#%E7%BE%A4%E6%B6%88%E6%81%AF
         :return: str格式的返回文本或None（如果你不想用默认的消息返回或没有返回消息）
         """
@@ -119,4 +130,3 @@ class Plugin:
         请勿更改
         """
         return self.name
-
