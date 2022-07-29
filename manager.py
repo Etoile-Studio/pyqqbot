@@ -2,6 +2,8 @@ import os
 import threading
 import time
 from importlib import import_module
+
+from API.types import PrivateMessage, GroupMessage, GroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
 from settings import PLUGIN_PATH, PLUGIN_PACKAGE, LOGGER, PLUGIN_LIST
 from API.plugin import Plugin
 from API.misc import removeMiscPath, getClasses
@@ -24,24 +26,25 @@ def loadPlugins():
             plugin_classes = getClasses(plugin)
             for plugin_class in plugin_classes:
                 if Plugin in plugin_class.__bases__:
-                    name = plugin_class().getName()
+                    initedPluginClass = plugin_class()
+                    name = initedPluginClass.getName()
                     if plugin_class.on_group_add_request != Plugin.on_group_add_request:
-                        plugins["on_group_add_request"].append(plugin_class().on_group_add_request)
+                        plugins["on_group_add_request"].append(initedPluginClass.on_group_add_request)
 
                     if plugin_class.on_group_member_add != Plugin.on_group_member_add:
-                        plugins["on_group_member_add"].append(plugin_class().on_group_member_add)
+                        plugins["on_group_member_add"].append(initedPluginClass.on_group_member_add)
 
                     if plugin_class.on_group_member_leave != Plugin.on_group_member_leave:
-                        plugins["on_group_member_leave"].append(plugin_class().on_group_member_leave)
+                        plugins["on_group_member_leave"].append(initedPluginClass.on_group_member_leave)
 
                     if plugin_class.on_group_file != Plugin.on_group_file:
-                        plugins["on_group_file"].append(plugin_class().on_group_file)
+                        plugins["on_group_file"].append(initedPluginClass.on_group_file)
 
                     if plugin_class.on_group_message != Plugin.on_group_message:
-                        plugins["on_group_message"].append(plugin_class().on_group_message)
+                        plugins["on_group_message"].append(initedPluginClass.on_group_message)
 
                     if plugin_class.on_group_anonymous_message != Plugin.on_group_anonymous_message:
-                        plugins["on_group_anonymous_message"].append(plugin_class().on_group_anonymous_message)
+                        plugins["on_group_anonymous_message"].append(initedPluginClass.on_group_anonymous_message)
 
                     if plugin_class.on_command != Plugin.on_command:
                         flag = True
@@ -52,7 +55,8 @@ def loadPlugins():
                                 flag = False
                                 break
                         if flag:
-                            plugins["on_command"].append({name: plugin_class().on_command})
+                            plugins["on_command"].append(
+                                {name: {"exec": initedPluginClass.on_command, "helper": initedPluginClass.helper}})
         except ImportError:
             LOGGER.error(f"Plugin {pluginDir} doesn't have an entrance. Please add main.py to the plugin")
     LOGGER.info("finish loading")
@@ -68,7 +72,9 @@ def executeCommand(rawCommand, fullEvent):
         return command[1]
     for plugin in plugins["on_command"]:
         if command["exec"] in plugin.keys():
-            return plugin[command["exec"]](command["args"], fullEvent)
+            return plugin[command["exec"]]["exec"](command["args"], GroupMessage(fullEvent) if fullEvent[
+                                                                                                   "message_type"] == "group" else PrivateMessage(
+                fullEvent))
     LOGGER.error("用户请求不存在的命令")
     return "您请求的命令不存在"
 
@@ -79,17 +85,17 @@ def executeEvent(eventType, fullEvent):
     args = False
     match eventType:
         case "on_group_message":
-            args = (fullEvent["raw_message"], fullEvent)
+            args = (GroupMessage(fullEvent),)
         case "on_group_file":
-            args = (fullEvent["file"], fullEvent)
+            args = (GroupFile(fullEvent))
         case "on_group_member_add":
-            args = (fullEvent["user_id"], fullEvent)
+            args = (GroupMemberAdd(fullEvent),)
         case "on_group_member_leave":
-            args = (fullEvent["user_id"], fullEvent)
+            args = (GroupMemberLeave(fullEvent),)
         case "on_group_add_request":
-            args = (fullEvent["comment"], fullEvent["flag"], fullEvent)
+            args = (GroupAddRequest(fullEvent),)
         case "on_group_anonymous_message":
-            args = (fullEvent["raw_message"], fullEvent)
+            args = (GroupMessage(fullEvent),)
     if not args:
         LOGGER.info("暂不支持此event")
         return

@@ -1,8 +1,11 @@
 import requests
 from settings import HTTP_PORT, HTTP_HOST
+from API.types import ForwardMessage
 
 
-class ForwardMessage:
+class ForwardMessageGenerator:
+    """目前api有点问题，不建议用"""
+
     def __init__(self):
         self.messages = []
 
@@ -10,7 +13,7 @@ class ForwardMessage:
         self.messages.append({
             "type": "node",
             "data": {
-                "id": messageId
+                "id": str(messageId)
             }
         })
 
@@ -19,7 +22,7 @@ class ForwardMessage:
             "type": "node",
             "data": {
                 "name": customDisplayName,
-                "uin": customUserId,
+                "uin": str(customUserId),
                 "content": rawMessage
             }
         })
@@ -28,8 +31,8 @@ class ForwardMessage:
         return self.messages
 
 
-def sendGroupMessage(groupId: int, msg: str, rawContent: bool = False):
-    return requests.post(
+def sendGroupMessage(groupId: int, msg: str, rawContent: bool = False) -> int:
+    data = requests.post(
         f"http://{HTTP_HOST}:{HTTP_PORT}/send_group_msg",
         data={
             "group_id": groupId,
@@ -37,9 +40,13 @@ def sendGroupMessage(groupId: int, msg: str, rawContent: bool = False):
             "message": msg
         }
     ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        return data["data"]["message_id"]
+    return -1
 
 
-def sendGroupTogetherForwardMessage(groupId: int, msgNodes: ForwardMessage):
+def sendGroupTogetherForwardMessage(groupId: int, msgNodes: ForwardMessageGenerator):
+    """目前api有点问题，不建议用"""
     return requests.post(
         f"http://{HTTP_HOST}:{HTTP_PORT}/send_group_forward_msg",
         data={
@@ -49,10 +56,16 @@ def sendGroupTogetherForwardMessage(groupId: int, msgNodes: ForwardMessage):
     ).json()
 
 
-def getForwardMessage(messageId: int):
-    return requests.post(
+def getForwardMessage(messageId: str) -> list[ForwardMessage] | None | int:
+    data = requests.post(
         f"http://{HTTP_HOST}:{HTTP_PORT}/get_forward_msg",
         data={
             "message_id": messageId
         }
     ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        returnList = []
+        for dat in data["data"]:
+            returnList.append(ForwardMessage(dat))
+        return returnList
+    return -1

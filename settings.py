@@ -18,7 +18,7 @@ WEBSOCKET_PORT = 6700
 HTTP_PORT = 5700
 
 # log config
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 logging.basicConfig(format="[%(asctime)s](%(levelname)s): %(message)s", level=LOG_LEVEL)
 LOGGER = logging.getLogger()
 

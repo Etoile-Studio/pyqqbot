@@ -3,7 +3,7 @@ from settings import HTTP_PORT, HTTP_HOST
 
 
 def sendPrivateMessage(groupId: int, toUser: int, msg: str, rawContent: bool = False):
-    return requests.post(
+    data =  requests.post(
         f"http://{HTTP_HOST}:{HTTP_PORT}/send_private_msg",
         data={
             "group_id": groupId,
@@ -12,3 +12,6 @@ def sendPrivateMessage(groupId: int, toUser: int, msg: str, rawContent: bool = F
             "message": msg
         }
     ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        return data["data"]["message_id"]
+    return -1

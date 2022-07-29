@@ -80,6 +80,7 @@ async def manage():
                                         if event["anonymous"] is not None:
                                             threading.Thread(target=manager.executeEvent,
                                                              args=("on_group_anonymous_message", event)).start()
+                                            continue
                                         if rawMessage.find(cqcode.at(QQ_ID)) == 0:
                                             rawMessage = rawMessage.lstrip(cqcode.at(QQ_ID))
                                             threading.Thread(target=returnCommandResultGroup,
@@ -105,10 +106,12 @@ async def manage():
                                                  args=("on_group_member_leave", event)).start()
                     if event["post_type"] == "request":
                         match event["request_type"]:
-                            case "add":
-                                LOGGER.info("有人要加群！！！")
-                                threading.Thread(target=manager.executeEvent, args=("on_group_add_request", event)).start()
-                    LOGGER.debug(json.dumps(event))
+                            case "group":
+                                match event["sub_type"]:
+                                    case "add":
+                                        LOGGER.info("有人要加群！！！")
+                                        threading.Thread(target=manager.executeEvent, args=("on_group_add_request", event)).start()
+                    LOGGER.debug(json.dumps(event, indent=4))
         except websockets.ConnectionClosedError:
             LOGGER.error("连接失败，1秒后重试")
             time.sleep(1)

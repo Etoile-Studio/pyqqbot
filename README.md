@@ -16,9 +16,10 @@ python qqbot depends on go-cqhttp
 
 5. 将你要的插件放入plugins文件夹下
 
-6. 非win的用户需要改一下main.py中的 “go-cqhttp.exe”
+6. win的用户需要改一下main.py中的 “./go-cqhttp”
    ```python
-   proc = subprocess.Popen(args="go-cqhttp.exe -faststart", shell=True, cwd=BOT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   proc = subprocess.Popen(args="./go-cqhttp -faststart", shell=True, cwd=BOT_PATH, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    ```
 7. 运行main.py, then enjoy it
 
+# <span style="color:red;">项目仍在开发中，请等待正式版1.0</span>
