@@ -1,6 +1,6 @@
 from API.actions.cqcode import at
 from settings import QQ_ID
-from API.types import PrivateMessage, GroupMessage, GroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
+from API.types import PrivateMessage, GroupMessage, UploadGroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
 
 
 class PluginHelpText:
@@ -9,7 +9,7 @@ class PluginHelpText:
         self.arguments = []
         self.examples = []
 
-    def addArg(self, name, descriptions, isBoolArg=True, valueName=None, types=None):
+    def addArg(self, name, descriptions, valueName, types, isBoolArg=True):
         if isBoolArg:
             self.arguments.append(f"\t-{name} {descriptions}")
             return
@@ -37,11 +37,13 @@ class Plugin:
     所有plugin的父类，必须extend才会被识别
     """
 
-    def __init__(self, name):
+    def __init__(self, name, permissionLevel):
         """
         :param name: plugin的命名（只有在此插件有command时才重要，但必须填）
+        :param permissionLevel: 命令总体权限，可为all, admin
         """
         self.name = name
+        self.permissionLevel = permissionLevel
 
     def helper(self):
         """
@@ -81,7 +83,7 @@ class Plugin:
         """
         ...
 
-    def on_group_file(self, event: GroupFile):
+    def on_group_file(self, event: UploadGroupFile):
         """
         当收到文件上传时执行\n
         不会返回任何数据，请自行返回\n

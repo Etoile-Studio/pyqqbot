@@ -11,7 +11,7 @@ from API.actions.private.message import sendPrivateMessage
 from API.actions import cqcode
 import manager
 
-proc = subprocess.Popen(args="./go-cqhttp -faststart", shell=True, cwd=BOT_PATH,
+proc = subprocess.Popen(args="go-cqhttp.exe -faststart", shell=True, cwd=BOT_PATH,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
@@ -48,6 +48,7 @@ async def manage():
                     if event["post_type"] == "message":
                         if event["sub_type"] == "group_self":
                             continue
+                        LOGGER.info(json.dumps(event, indent=4))
                         continueProcess = True
                         # 生成log
                         log = "收到一条消息:\n"
@@ -99,7 +100,8 @@ async def manage():
                                 threading.Thread(target=manager.executeEvent, args=("on_group_file", event)).start()
                             case "group_increase":
                                 LOGGER.info("群里来了新成员")
-                                threading.Thread(target=manager.executeEvent, args=("on_group_member_add", event)).start()
+                                threading.Thread(target=manager.executeEvent,
+                                                 args=("on_group_member_add", event)).start()
                             case "group_decrease":
                                 LOGGER.info("群里有人走了")
                                 threading.Thread(target=manager.executeEvent,
@@ -110,8 +112,8 @@ async def manage():
                                 match event["sub_type"]:
                                     case "add":
                                         LOGGER.info("有人要加群！！！")
-                                        threading.Thread(target=manager.executeEvent, args=("on_group_add_request", event)).start()
-                    LOGGER.debug(json.dumps(event, indent=4))
+                                        threading.Thread(target=manager.executeEvent,
+                                                         args=("on_group_add_request", event)).start()
         except websockets.ConnectionClosedError:
             LOGGER.error("连接失败，1秒后重试")
             time.sleep(1)

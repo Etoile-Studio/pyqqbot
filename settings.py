@@ -18,7 +18,7 @@ WEBSOCKET_PORT = 6700
 HTTP_PORT = 5700
 
 # log config
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.INFO
 logging.basicConfig(format="[%(asctime)s](%(levelname)s): %(message)s", level=LOG_LEVEL)
 LOGGER = logging.getLogger()
 
@@ -32,3 +32,6 @@ PLUGIN_LIST = {
     "on_group_member_leave": [],
     "on_group_anonymous_message": []
 }
+
+# Q群文件系统同步间隔
+SYNC_TIME = 5 * 60

@@ -1,6 +1,6 @@
 import requests
 from settings import HTTP_PORT, HTTP_HOST
-from API.types import GroupInformation
+from API.types import GroupInformation, GroupAtAllRemain
 
 
 def setGroupName(groupId: int, name: str):
@@ -47,3 +47,15 @@ def getGroupImage(groupId: int):
     return requests.post(
         f"https://p.qlogo.cn/gh/{groupId}/{groupId}/100",
     ).content
+
+
+def getGroupAtAllRemain(groupId: int):
+    data = requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/get_group_at_all_remain",
+        data={
+            "group_id": groupId,
+        }
+    ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        return GroupAtAllRemain(data["data"])
+    return -1

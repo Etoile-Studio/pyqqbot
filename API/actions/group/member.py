@@ -1,6 +1,6 @@
 import requests
 from settings import HTTP_PORT, HTTP_HOST
-from API.types import GroupMember
+from API.types import GroupMember, CurrentTalkative, GroupHonor
 
 
 def kickGroupMember(groupId: int, kickUserId: int, noAddAgain: bool = False):
@@ -144,13 +144,43 @@ def getGroupMemberInfo(groupId: int, userId: int, noCache: bool = False):
 
 
 def getGroupHonorInfo(groupId: int, honorType: str):
-    return requests.post(
+    data = requests.post(
         f"http://{HTTP_HOST}:{HTTP_PORT}/get_group_honor_info",
         data={
             "group_id": groupId,
             "type": honorType
         }
     ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        returns = {"current_talkative": None, "talkative_list": None, "performer_list": None, "legend_list": None, "strong_newbie_list": None, "emotion_list": None}
+        match honorType:
+            case "talkative":
+                if data["data"]["current_talkative"] is not None:
+                    returns["current_talkative"] = CurrentTalkative(data["data"]["current_talkative"])
+            case "all":
+                if data["data"]["current_talkative"] is not None:
+                    returns["current_talkative"] = CurrentTalkative(data["data"]["current_talkative"])
+        if data["data"]["talkative_list"] is not None:
+            returns["talkative_list"] = []
+            for dat in data["data"]["talkative_list"]:
+                returns["talkative_list"].append(GroupHonor(dat))
+        if data["data"]["performer_list"] is not None:
+            returns["performer_list"] = []
+            for dat in data["data"]["performer_list"]:
+                returns["performer_list"].append(GroupHonor(dat))
+        if data["data"]["legend_list"] is not None:
+            returns["legend_list"] = []
+            for dat in data["data"]["legend_list"]:
+                returns["legend_list"].append(GroupHonor(dat))
+        if data["data"]["strong_newbie_list"] is not None:
+            returns["strong_newbie_list"] = []
+            for dat in data["data"]["strong_newbie_list"]:
+                returns["strong_newbie_list"].append(GroupHonor(dat))
+        if data["data"]["emotion_list"] is not None:
+            returns["emotion_list"] = []
+            for dat in data["data"]["emotion_list"]:
+                returns["emotion_list"].append(GroupHonor(dat))
+    return -1
 
 
 def getGroupHonorList(groupId: int):

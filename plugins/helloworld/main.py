@@ -1,5 +1,5 @@
 from API.plugin import PluginHelpText, Plugin
-from API.actions import sendGroupMessage
+from API.actions.group.message import sendGroupMessage
 
 
 class HelloWorld(Plugin):
@@ -15,5 +15,5 @@ class HelloWorld(Plugin):
     def on_command(self, command, fullEvent):
         return "Hello World !!!"
 
-    def on_group_message(self, raw_message, fullEvent):
-        sendGroupMessage(fullEvent["group_id"], raw_message + "!")
+    def on_group_message(self, event):
+        sendGroupMessage(event.groupId, event.rawMessage + "!")

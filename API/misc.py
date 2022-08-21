@@ -1,4 +1,6 @@
 import inspect
+import os.path
+
 from settings import PATH_BLACKLIST, LOGGER
 
 
@@ -16,3 +18,8 @@ def removeMiscPath(paths: list):
             paths.remove(blockedPath)
     # LOGGER.info(paths)
     return paths
+
+
+def mkdir(path):
+    if not os.path.exists(path):
+        os.mkdir(path)

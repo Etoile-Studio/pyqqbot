@@ -1,0 +1,181 @@
+import os.path
+import threading
+
+import requests
+
+from API.misc import mkdir
+from settings import HTTP_PORT, HTTP_HOST, PATH
+from API.types import FileSystemInfo, Folder, File
+from API.actions.group.filesystem.local_filesystem import LocalFileSystem
+
+PATH = os.path.join(PATH, "API/actions/group/filesystem")
+
+
+def findFileInFolder(groupId, fileId, folderId="/"):
+    """别用，我觉得你用会出问题"""
+    result = _listDir(groupId, folderId)
+    if result["files"] is None:
+        return -1
+    for file in result["files"]:
+        if file["file_id"] == fileId:
+            return folderId
+    if result["folders"] is None:
+        return -1
+    for folder in result["folders"]:
+        res = findFileInFolder(groupId, fileId, folder["folder_id"])
+        if res != -1:
+            return res
+    return -1
+
+
+def _listDir(groupId, folderId="/"):
+    if folderId == "/":
+        return requests.post(
+            f"http://{HTTP_HOST}:{HTTP_PORT}/get_group_root_files",
+            data={
+                "group_id": groupId,
+            }
+        ).json()["data"]
+    return requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/get_group_files_by_folder",
+        data={
+            "group_id": groupId,
+            "folder_id": folderId
+        }
+    ).json()["data"]
+
+
+def _getFilePath(groupId, parentFolderId, name):
+    downloadPath = os.path.join(PATH, f"{groupId}")
+    mkdir(downloadPath)
+    downloadPath = os.path.join(downloadPath,
+                                f"{parentFolderId}") if parentFolderId != "/" else downloadPath
+    mkdir(downloadPath)
+    downloadPath = os.path.join(downloadPath, name)
+    return downloadPath
+
+
+def _recordFile(groupId, parentFolderId, name, content):
+    with open(_getFilePath(groupId, parentFolderId, name), 'wb') as t:
+        t.write(content)
+
+
+def _copyFileToLFS(groupId, parentFolderId, name, fp):
+    with open(fp, "rb") as t1:
+        with open(_getFilePath(groupId, parentFolderId, name), "wb") as t2:
+            t2.write(t1.read())
+
+
+def _removeFile():
+    ...
+
+class Explorer:
+    def __init__(self, groupId):
+        self.groupId = groupId
+        self.LFS = LocalFileSystem()
+
+    def getFileSystemInfo(self):
+        data = requests.post(
+            f"http://{HTTP_HOST}:{HTTP_PORT}/upload_group_file",
+            data={
+                "group_id": self.groupId,
+            }
+        ).json()
+        if data["status"].lower() in ["ok", "async"]:
+            fileSystemInfo = FileSystemInfo(data["data"])
+            return fileSystemInfo
+        return -1, data["msg"]
+
+    def uploadToFolderByFolderName(self, filePath: str, fileName: str, folderName: str = "/"):
+        folderId = self.getFolderByFolderName(folderName)
+        if folderId == -1:
+            return -1, "SYNCING_OR_NOT_EXISTS"
+        return self.uploadToFolderByFolderId(filePath, fileName, folderId)
+
+    def uploadToFolderByFolderId(self, filePath: str, fileName: str, folderId: str = "/"):
+        data = requests.post(
+            f"http://{HTTP_HOST}:{HTTP_PORT}/upload_group_file",
+            data={
+                "group_id": self.groupId,
+                "file": filePath,
+                "name": fileName,
+                "folder": folderId
+            }
+        ).json()
+        if data["status"].lower() in ["ok", "async"]:
+            threading.Thread(target=_copyFileToLFS, args=(self.groupId, folderId, fileName, filePath)).start()
+            return "ok"
+        return -1, data["msg"]
+
+    def listDir(self, folderId="/"):
+        result = _listDir(self.groupId, folderId)
+        returns = {"folders": [], "files": []}
+        result["files"] = result["files"] if result["files"] is not None else []
+        result["folders"] = result["folders"] if result["folders"] is not None else []
+        for folder in result["folders"]:
+            returns["folders"].append(Folder(folder))
+        for file in result["files"]:
+            returns["files"].append(File(file))
+        return returns
+
+    def makeDir(self, folderName):
+        """此函数有点问题，请先别用"""
+        return requests.post(
+            f"http://{HTTP_HOST}:{HTTP_PORT}/create_group_file_folder",
+            data={
+                "group_id": self.groupId,
+                "name": folderName,
+                "parent_id": "/"
+            }
+        ).json()
+
+    def downloadFile(self, file: File):
+        data = requests.post(
+            f"http://{HTTP_HOST}:{HTTP_PORT}/get_group_file_url",
+            data={
+                "group_id": self.groupId,
+                "file_id": file.id,
+                "busid": file.busid
+            }
+        ).json()
+        if data["status"].lower() in ["ok", "async"]:
+            returns = requests.get(
+                data["data"]["url"]
+            ).content
+            threading.Thread(target=_recordFile, args=(file.groupId, file.parentFolderId, file.name, returns)).start()
+            return returns
+        return -1, data["msg"]
+
+    def remove(self, Id, busid=None, isFolder=False):
+        if not isFolder:
+            data = requests.post(
+                f"http://{HTTP_HOST}:{HTTP_PORT}/delete_group_file",
+                data={
+                    "group_id": self.groupId,
+                    "file_id": Id,
+                    "busid": busid
+                }
+            ).json()
+        else:
+            data = requests.post(
+                f"http://{HTTP_HOST}:{HTTP_PORT}/delete_group_folder",
+                data={
+                    "group_id": self.groupId,
+                    "folder_id": Id,
+                }
+            ).json()
+        if data["status"].lower() in ["ok", "async"]:
+            return "ok"
+        return -1, data["msg"]
+
+    def getFileByFileName(self, fileName):
+        return self.LFS.getFileByFileName(self.groupId, fileName)
+
+    def getFileByFileId(self, fileId):
+        return self.LFS.getFileByFileName(self.groupId, fileId)
+
+    def getFolderByFolderName(self, folderName):
+        return self.LFS.getFolderByFolderName(self.groupId, folderName)
+
+    def getFolderByFolderId(self, folderId):
+        return self.LFS.getFolderByFolderId(self.groupId, folderId)

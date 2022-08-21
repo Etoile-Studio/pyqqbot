@@ -1,3 +1,6 @@
+from API.actions.group.misc import findFileInFolder
+
+
 class Sender:
     def __init__(self, sender):
         self.userId = sender["user_id"]
@@ -14,7 +17,6 @@ class GroupSender(Sender):
         self.level = sender["level"]
         self.role = sender["role"]
         self.title = sender["title"]
-        self.groupId = sender["group_id"]
 
 
 class Anonymous:
@@ -50,22 +52,6 @@ class GroupMessage(Message):
         self.sender = GroupSender(event["sender"])
         self.groupId = event["group_id"]
         self.anonymous = None if event["anonymous"] is None else Anonymous(event["anonymous"])
-
-
-class File:
-    def __init__(self, file):
-        self.id = file["id"]
-        self.name = file["name"]
-        self.size = file["size"]
-        self.url = file["url"]
-
-
-class GroupFile:
-    def __init__(self, event):
-        self.time = event["time"]
-        self.groupId = event["group_id"]
-        self.userId = event["user_id"]
-        self.file = File(event["file"])
 
 
 class GroupMemberChange:
@@ -154,3 +140,97 @@ class GroupMember(GroupSender):
         self.titleExpireTime = user['title_expire_time']
         self.canChangeNickName = user['card_changeable']
         self.shutUpTimeStamp = user['shut_up_timestamp']
+
+
+"""
+| `file_count`  |
+| ------------- |
+| `limit_count` |
+| `used_space`  |
+| `total_space` |
+"""
+
+
+class FileSystemInfo:
+    def __init__(self, info):
+        self.fileCount = info["file_count"]
+        self.maxCount = info["limit_count"]
+        self.usedSpace = info["used_space"]
+        self.maxSpace = info["total_space"]
+
+
+class UploadFile:
+    def __init__(self, file):
+        self.id = file["id"]
+        self.name = file["name"]
+        self.size = file["size"]
+        self.url = file["url"]
+
+
+class UploadGroupFile:
+    def __init__(self, event):
+        self.time = event["time"]
+        self.groupId = event["group_id"]
+        self.userId = event["user_id"]
+        self.file = UploadFile(event["file"])
+
+
+class File:
+    def __init__(self, file):
+        self.groupId = file["group_id"]
+        self.id = file["file_id"]
+        self.name = file["file_name"]
+        self.busid = file["busid"]
+        self.size = file["file_size"]
+        self.parentFolderId = findFileInFolder(self.groupId, self.id)
+        self.uploadTime = file["upload_time"]
+        self.expireTime = file["dead_time"]
+        self.lastModifyTime = file["modify_time"]
+        self.downloadTimes = file["download_times"]
+        self.uploaderId = file["uploader"]
+        self.uploaderName = file["uploader_name"]
+
+
+class Folder:
+    def __init__(self, folder):
+        self.groupId = folder["group_id"]
+        self.id = folder["folder_id"]
+        self.name = folder["folder_name"]
+        self.createTime = folder["create_time"]
+        self.creatorId = folder["creator"]
+        self.creatorName = folder["creator_name"]
+        self.totalFileCount = folder["total_file_count"]
+
+
+class GroupAtAllRemain:
+    def __init__(self, remain):
+        self.canAtAll = remain["can_at_all"]
+        self.remainAtAllCountForGroup = remain["remain_at_all_count_for_group"]
+        self.remainAtAllCountForYou = remain["remain_at_all_count_for_uin"]
+
+
+class EssenceMessage:
+    def __init__(self, message):
+        self.senderId = message["sender_id"]
+        self.senderNick = message["sender_nick"]
+        self.sendTime = message["sender_time"]
+        self.operatorId = message["operator_id"]
+        self.operatorNick = message["operator_nick"]
+        self.operatorTime = message["operator_time"]
+        self.id = message["message_id"]
+
+
+class CurrentTalkative:
+    def __init__(self, talkative):
+        self.userId = talkative["user_id"]
+        self.nickName = talkative["nickname"]
+        self.avatar = talkative["avatar"]
+        self.dayCount = talkative["day_count"]
+
+
+class GroupHonor:
+    def __init__(self, honor):
+        self.userId = honor["user_id"]
+        self.nickName = honor["nickname"]
+        self.avatar = honor["avatar"]
+        self.description = honor["description"]

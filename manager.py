@@ -3,9 +3,9 @@ import threading
 import time
 from importlib import import_module
 
-from API.types import PrivateMessage, GroupMessage, GroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
+from API.types import PrivateMessage, GroupMessage, UploadGroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
 from settings import PLUGIN_PATH, PLUGIN_PACKAGE, LOGGER, PLUGIN_LIST
-from API.plugin import Plugin
+from API.plugin import Plugin, PluginHelpText
 from API.misc import removeMiscPath, getClasses
 from command_spilter import splitCommand
 
@@ -20,6 +20,7 @@ def loadPlugins():
     LOGGER.info("loading plugins")
     plugins = PLUGIN_LIST
     pluginDirs = removeMiscPath(os.listdir(PLUGIN_PATH))
+    plugins["on_command"].append({"help": {"exec": helper, "helper": helperHelper}})
     for pluginDir in pluginDirs:
         try:
             plugin = import_module(f"{PLUGIN_PACKAGE}.{pluginDir}.main")
@@ -56,7 +57,7 @@ def loadPlugins():
                                 break
                         if flag:
                             plugins["on_command"].append(
-                                {name: {"exec": initedPluginClass.on_command, "helper": initedPluginClass.helper}})
+                                {name: {"exec": initedPluginClass.on_command, "helper": initedPluginClass.helper, "permission": initedPluginClass.permissionLevel}})
         except ImportError:
             LOGGER.error(f"Plugin {pluginDir} doesn't have an entrance. Please add main.py to the plugin")
     LOGGER.info("finish loading")
@@ -87,7 +88,7 @@ def executeEvent(eventType, fullEvent):
         case "on_group_message":
             args = (GroupMessage(fullEvent),)
         case "on_group_file":
-            args = (GroupFile(fullEvent))
+            args = (UploadGroupFile(fullEvent))
         case "on_group_member_add":
             args = (GroupMemberAdd(fullEvent),)
         case "on_group_member_leave":
@@ -101,3 +102,22 @@ def executeEvent(eventType, fullEvent):
         return
     for plugin in plugins[f"{eventType}"]:
         threading.Thread(target=plugin, args=args).start()
+
+
+def helper(command, event):
+    LOGGER.info(command)
+    if "exec" not in command:
+        return helperHelper()
+    for plugin in plugins["on_command"]:
+        if command["exec"] in plugin.keys():
+            return plugin[command["exec"]]["helper"]()
+    LOGGER.error("用户请求不存在的命令")
+    return "您请求的命令不存在"
+
+
+def helperHelper():
+    text = PluginHelpText("help")
+    text.addArg("exec", "指定您需要命令的帮助文档", "命令", "string")
+    text.addExample("-exec:help", "打印help命令的文档")
+    return text.generate()
+

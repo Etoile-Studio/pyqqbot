@@ -1,6 +1,6 @@
 import requests
 from settings import HTTP_PORT, HTTP_HOST
-from API.types import ForwardMessage
+from API.types import ForwardMessage, EssenceMessage
 
 
 class ForwardMessageGenerator:
@@ -68,4 +68,57 @@ def getForwardMessage(messageId: str) -> list[ForwardMessage] | None | int:
         for dat in data["data"]:
             returnList.append(ForwardMessage(dat))
         return returnList
+    return -1
+
+
+def sendGroupNotice(groupId, content, imagePath):
+    data = requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/_send_group_notice",
+        data={
+            "group_id": groupId,
+            "content": content,
+            "image": imagePath
+        }
+    ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        return "ok"
+    return -1
+
+
+def setEssenceMessage(messageId):
+    data = requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/set_essence_msg",
+        data={
+            "message_id": messageId
+        }
+    ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        return "ok"
+    return -1
+
+
+def deleteEssenceMessage(messageId):
+    data = requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/delete_essence_msg",
+        data={
+            "message_id": messageId
+        }
+    ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        return "ok"
+    return -1
+
+
+def getEssenceMessageList(groupId):
+    data = requests.post(
+        f"http://{HTTP_HOST}:{HTTP_PORT}/get_essence_msg_list",
+        data={
+            "group_id": groupId
+        }
+    ).json()
+    if data["status"].lower() in ["ok", "async"]:
+        returns = []
+        for dat in data["data"]:
+            returns.append(EssenceMessage(dat))
+        return returns
     return -1

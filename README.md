@@ -22,4 +22,4 @@ python qqbot depends on go-cqhttp
    ```
 8. 运行main.py, then enjoy it
 
-# <span style="color:red;">项目仍在开发中，请等待正式版1.0</span>
+# <font color="red">项目仍在开发中，请等待正式版1.0</font>
