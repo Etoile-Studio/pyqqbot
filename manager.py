@@ -3,15 +3,19 @@ import threading
 import time
 from importlib import import_module
 
-from API.types import PrivateMessage, GroupMessage, UploadGroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
-from settings import PLUGIN_PATH, PLUGIN_PACKAGE, LOGGER, PLUGIN_LIST
+from API.actions import cqcode
+from API.actions.group.message import sendGroupMessage
+from API.permission import Permissions, setMemberPermissionCommand, havePermission, setMemberPermissionCommandHelper, \
+    getMemberPermissionCommand, getMemberPermissionCommandHelper
+from API.types import GroupMessage, UploadGroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
+from settings import PLUGIN_PATH, PLUGIN_PACKAGE, LOGGER, PLUGIN_LIST, QQ_ID
 from API.plugin import Plugin, PluginHelpText
 from API.misc import removeMiscPath, getClasses
 from command_spilter import splitCommand
 
 plugins = PLUGIN_LIST
 reloading = False
-
+permissionName = ["member", "admin", "owner"]
 
 def loadPlugins():
     global plugins
@@ -20,7 +24,14 @@ def loadPlugins():
     LOGGER.info("loading plugins")
     plugins = PLUGIN_LIST
     pluginDirs = removeMiscPath(os.listdir(PLUGIN_PATH))
-    plugins["on_command"].append({"help": {"exec": helper, "helper": helperHelper}})
+    plugins["on_command"].append({"help": {"exec": helper, "helper": helperHelper, "permission": Permissions.member}})
+    plugins["on_command"].append({"setMemberPermission": {"exec": setMemberPermissionCommand,
+                                                          "helper": setMemberPermissionCommandHelper,
+                                                          "permission": Permissions.owner}})
+    plugins["on_command"].append({"getMemberPermission": {"exec": getMemberPermissionCommand,
+                                                          "helper": getMemberPermissionCommandHelper,
+                                                          "permission": Permissions.member}})
+    plugins["on_command"].append({"reload": {"exec": reload, "helper": reloadHelper, "permission": Permissions.owner}})
     for pluginDir in pluginDirs:
         try:
             plugin = import_module(f"{PLUGIN_PACKAGE}.{pluginDir}.main")
@@ -57,7 +68,8 @@ def loadPlugins():
                                 break
                         if flag:
                             plugins["on_command"].append(
-                                {name: {"exec": initedPluginClass.on_command, "helper": initedPluginClass.helper, "permission": initedPluginClass.permissionLevel}})
+                                {name: {"exec": initedPluginClass.on_command, "helper": initedPluginClass.helper,
+                                        "permission": initedPluginClass.permissionLevel}})
         except ImportError:
             LOGGER.error(f"Plugin {pluginDir} doesn't have an entrance. Please add main.py to the plugin")
     LOGGER.info("finish loading")
@@ -67,15 +79,18 @@ def loadPlugins():
 def executeCommand(rawCommand, fullEvent):
     while reloading:
         time.sleep(0.1)
+    if rawCommand.strip() == "":
+        menu(fullEvent["group_id"], fullEvent["user_id"])
+        return None
     command = splitCommand(rawCommand)
     if type(command) == tuple:
         LOGGER.info("用户请求命令时参数出错")
         return command[1]
     for plugin in plugins["on_command"]:
         if command["exec"] in plugin.keys():
-            return plugin[command["exec"]]["exec"](command["args"], GroupMessage(fullEvent) if fullEvent[
-                                                                                                   "message_type"] == "group" else PrivateMessage(
-                fullEvent))
+            if havePermission(fullEvent["group_id"], fullEvent["user_id"], plugin[command["exec"]]["permission"]):
+                return plugin[command["exec"]]["exec"](command["args"], GroupMessage(fullEvent))
+            return "没有权限"
     LOGGER.error("用户请求不存在的命令")
     return "您请求的命令不存在"
 
@@ -105,7 +120,6 @@ def executeEvent(eventType, fullEvent):
 
 
 def helper(command, event):
-    LOGGER.info(command)
     if "exec" not in command:
         return helperHelper()
     for plugin in plugins["on_command"]:
@@ -117,7 +131,29 @@ def helper(command, event):
 
 def helperHelper():
     text = PluginHelpText("help")
-    text.addArg("exec", "指定您需要命令的帮助文档", "命令", "string")
+    text.addArg("exec", "指定您需要命令的帮助文档", "命令", ["string"], False)
     text.addExample("-exec:help", "打印help命令的文档")
     return text.generate()
 
+
+def reload(command, event):
+    loadPlugins()
+    return "加载成功"
+
+
+def reloadHelper():
+    text = PluginHelpText("reload")
+    text.addExample("", "重新加载插件")
+    return text.generate()
+
+
+def menu(groupId, userId):
+    while reloading:
+        time.sleep(0.1)
+    text = f"{cqcode.at(userId)}\n=====主菜单=====\n"
+    text += "命令:\n"
+    for exe in plugins["on_command"]:
+        commandName = list(exe.keys())[0]
+        text += f"\t{commandName} 权限: {permissionName[exe[commandName]['permission']]}\n"
+    text += f"使用{cqcode.at(QQ_ID)} help -exec:(命令名) 来查询指令用法"
+    sendGroupMessage(groupId, text)

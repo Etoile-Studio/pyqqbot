@@ -1,6 +1,6 @@
 from API.actions.cqcode import at
 from settings import QQ_ID
-from API.types import PrivateMessage, GroupMessage, UploadGroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
+from API.types import GroupMessage, UploadGroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
 
 
 class PluginHelpText:
@@ -9,17 +9,17 @@ class PluginHelpText:
         self.arguments = []
         self.examples = []
 
-    def addArg(self, name, descriptions, valueName, types, isBoolArg=True):
+    def addArg(self, name, descriptions, valueName, types, isBoolArg=True, isNeeded=True):
         if isBoolArg:
-            self.arguments.append(f"\t-{name} {descriptions}")
+            self.arguments.append(f"\t-{name} {descriptions} {'必填' if isNeeded else '可选'}")
             return
-        self.arguments.append(f"\t-{name}:<{valueName}[{', '.join(types)}]> {descriptions}")
+        self.arguments.append(f"\t-{name}:<{valueName}[{', '.join(types)}]> {descriptions} {'必填' if isNeeded else '可选'}")
 
     def addExample(self, command, descriptions):
         self.examples.append(f"\t{at(QQ_ID)} {self.name} {command} {descriptions}")
 
     def generate(self):
-        helpText = f"====={self.name}的用法=====\n"
+        helpText = f"\n====={self.name}的用法=====\n"
         if len(self.arguments):
             helpText += "参数:\n"
             helpText += "\n".join(self.arguments)
@@ -73,7 +73,7 @@ class Plugin:
         """
         ...
 
-    def on_command(self, command: dict, event: GroupMessage | PrivateMessage):
+    def on_command(self, command: dict, event: GroupMessage):
         """
         当收到命令时执行\n
         此时收到的命令有可能是来自群聊或临时会话的，如果不想用默认返回消息方式，请做好判断\n

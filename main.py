@@ -7,7 +7,8 @@ import time
 import websockets
 from settings import WEBSOCKET_HOST, WEBSOCKET_PORT, QQ_ID, GROUP_ID, LOGGER, BOT_PATH
 from API.actions.group.message import sendGroupMessage
-from API.actions.private.message import sendPrivateMessage
+
+"""from API.actions.private.message import sendPrivateMessage"""
 from API.actions import cqcode
 import manager
 
@@ -22,11 +23,11 @@ def returnCommandResultGroup(rawMessage, event):
             event["user_id"]) + " " + result)
 
 
-def returnCommandResultPrivate(rawMessage, event):
+"""def returnCommandResultPrivate(rawMessage, event):
     result = manager.executeCommand(rawMessage, event)
     if result is not None:
         sendPrivateMessage(event["group_id"], event["user_id"], cqcode.at(
-            event["user_id"]) + " " + result)
+            event["user_id"]) + " " + result)"""
 
 
 # 从服务器接收数据
@@ -55,13 +56,13 @@ async def manage():
                         log += "来源:"
                         match event["sub_type"]:
                             case "friend":
-                                log += "朋友(当群临时会话处理)\n"
+                                log += "朋友(不做处理)\n"
                             case "group":
-                                log += "群临时会话\n"
+                                log += "群临时会话(不做处理)\n"
                             case "normal":
                                 log += "群消息\n"
                             case "anonymous":
-                                log += "匿名消息（这是不允许的）\n"
+                                log += "匿名消息\n"
                                 continueProcess = False
                             case "notice":
                                 log += "群通知(不做处理)\n"
@@ -89,10 +90,7 @@ async def manage():
                                             continue
                                         threading.Thread(target=manager.executeEvent,
                                                          args=("on_group_message", event)).start()
-                                # 来自私聊或群临时会话，此处命令无需@
-                                case "private":
-                                    threading.Thread(target=returnCommandResultPrivate,
-                                                     args=(rawMessage, event)).start()
+                                # 来自私聊或群临时会话，此处命令无需@, 我不想写了
                     if event["post_type"] == "notice":
                         match event["notice_type"]:
                             case "group_upload":

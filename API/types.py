@@ -37,12 +37,12 @@ class Message:
         self.rawMessage = event["raw_message"]
 
 
-class PrivateMessage(Message):
+"""class PrivateMessage(Message):
     def __init__(self, event):
         super(PrivateMessage, self).__init__(event)
-        self.type = "private"
+        self.type = "_private"
         self.sender = Sender(event["sender"])
-        self.tempSource = event["temp_source"]
+        self.tempSource = event["temp_source"]"""
 
 
 class GroupMessage(Message):
