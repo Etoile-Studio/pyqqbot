@@ -17,12 +17,13 @@ plugins = PLUGIN_LIST
 reloading = False
 permissionName = ["member", "admin", "owner"]
 
+
 def loadPlugins():
     global plugins
     global reloading
     reloading = True
     LOGGER.info("loading plugins")
-    plugins = PLUGIN_LIST
+    plugins = PLUGIN_LIST.copy()
     pluginDirs = removeMiscPath(os.listdir(PLUGIN_PATH))
     plugins["on_command"].append({"help": {"exec": helper, "helper": helperHelper, "permission": Permissions.member}})
     plugins["on_command"].append({"setMemberPermission": {"exec": setMemberPermissionCommand,
