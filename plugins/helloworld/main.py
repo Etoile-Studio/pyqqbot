@@ -4,7 +4,7 @@ from API.actions.group.message import sendGroupMessage
 
 class HelloWorld(Plugin):
     def __init__(self):
-        super(HelloWorld, self).__init__("helloworld")
+        super(HelloWorld, self).__init__("helloworld", 'all')
 
     def helper(self):
         helpText = PluginHelpText(self.name)
