@@ -10,7 +10,7 @@ from API.permission import Permissions, setMemberPermissionCommand, havePermissi
 from API.types import GroupMessage, UploadGroupFile, GroupMemberAdd, GroupMemberLeave, GroupAddRequest
 from settings import PLUGIN_PATH, PLUGIN_PACKAGE, LOGGER, PLUGIN_LIST, QQ_ID
 from API.plugin import Plugin, PluginHelpText
-from API.misc import removeMiscPath, getClasses
+from API.misc import removeMiscPath, getClasses, getCommandListener
 from command_spilter import splitCommand
 
 plugins = PLUGIN_LIST
@@ -40,7 +40,6 @@ def loadPlugins():
             for plugin_class in plugin_classes:
                 if Plugin in plugin_class.__bases__:
                     initedPluginClass = plugin_class()
-                    name = initedPluginClass.getName()
                     if plugin_class.on_group_add_request != Plugin.on_group_add_request:
                         plugins["on_group_add_request"].append(initedPluginClass.on_group_add_request)
 
@@ -59,7 +58,9 @@ def loadPlugins():
                     if plugin_class.on_group_anonymous_message != Plugin.on_group_anonymous_message:
                         plugins["on_group_anonymous_message"].append(initedPluginClass.on_group_anonymous_message)
 
-                    if plugin_class.on_command != Plugin.on_command:
+                    onCommands = getCommandListener(initedPluginClass)
+                    for command in onCommands["exec"]:
+                        name = command[0]
                         flag = True
                         for plug in plugins["on_command"]:
                             if name in plug.keys():
@@ -69,8 +70,8 @@ def loadPlugins():
                                 break
                         if flag:
                             plugins["on_command"].append(
-                                {name: {"exec": initedPluginClass.on_command, "helper": initedPluginClass.helper,
-                                        "permission": initedPluginClass.permissionLevel}})
+                                {name: {"exec": command[1], "helper": onCommands["helper"][name],
+                                        "permission": onCommands["permission"][name]}})
         except ImportError:
             LOGGER.error(f"Plugin {pluginDir} doesn't have an entrance. Please add main.py to the plugin")
     LOGGER.info("finish loading")

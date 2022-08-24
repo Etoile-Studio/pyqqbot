@@ -1,20 +1,19 @@
 from API.permission import Permissions
 from API.plugin import PluginHelpText, Plugin
-from API.actions.group.message import sendGroupMessage
 
 
 class HelloWorld(Plugin):
     def __init__(self):
-        super(HelloWorld, self).__init__("helloworld", Permissions.member)
+        super(HelloWorld, self).__init__()
 
-    def helper(self):
-        helpText = PluginHelpText(self.name)
+    def helloworld_helper(self):
+        helpText = PluginHelpText("helloworld")
         helpText.addExample("", "打印helloworld")
         helpText = helpText.generate()
         return helpText
 
-    def on_command(self, command, fullEvent):
+    def on_command_helloworld(self, command, fullEvent):
         return "Hello World !!!"
 
-    def on_group_message(self, event):
-        sendGroupMessage(event.groupId, event.rawMessage + "!")
+    def get_permission_helloworld(self):
+        return Permissions.member

@@ -34,19 +34,16 @@ def splitCommand(command: str):
         "args": {}
     }
     commandArguments.pop(0)
-    print(commandArguments)
     for commandArgument in commandArguments:
         if commandArgument[0] != '-':
             return None, f"命令处理出错：不正确的语法\"{commandArgument}\"，您是不是指\"-{commandArgument}\""
         commandArgument = commandArgument.lstrip("-")
-        print(commandArgument)
         kw = commandArgument.find(":")
         if kw == -1:
             command["args"][commandArgument] = True
         else:
             key = commandArgument[0:kw]
             value = commandArgument[kw + 1:len(commandArgument)]
-            print(key, value)
             if key in command["args"]:
                 if type(command["args"][key]) == list:
                     command["args"][key].append(value)
@@ -54,6 +51,5 @@ def splitCommand(command: str):
                     command["args"][key] = [command["args"][key], value]
             else:
                 command["args"][key] = value
-    print(command)
     return command
 

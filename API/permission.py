@@ -68,7 +68,6 @@ def getMemberPermissionCommand(command, event):
     """if event.type == "_private":
         return "请在群中操作"""
     data = getMemberPermission(event.groupId)
-    print(data)
     text = f"群主：{data['owner']}\n命令管理员：{' '.join([str(i) for i in data['admin']])}"
     return text
 

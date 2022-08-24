@@ -37,15 +37,12 @@ class Plugin:
     所有plugin的父类，必须extend才会被识别
     """
 
-    def __init__(self, name, permissionLevel):
+    def __init__(self):
         """
-        :param name: plugin的命名（只有在此插件有command时才重要，但必须填）
         :param permissionLevel: 命令总体权限，可为all, admin
         """
-        self.name = name
-        self.permissionLevel = permissionLevel
 
-    def helper(self):
+    def _helper(self):
         """
         这玩意儿是给自带插件helper用的\n
         比如：\n
@@ -55,6 +52,9 @@ class Plugin:
         return helpText\n
         :return: str格式的格式化后的帮助文本
         """
+        ...
+
+    def get_permission_(self):
         ...
 
     def on_group_message(self, event: GroupMessage):
@@ -119,9 +119,3 @@ class Plugin:
         :return: None(如有消息请自行返回)
         """
         ...
-
-    def getName(self):
-        """
-        请勿更改
-        """
-        return self.name
