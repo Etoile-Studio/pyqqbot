@@ -36,12 +36,6 @@ class Plugin:
     """
     所有plugin的父类，必须extend才会被识别
     """
-
-    def __init__(self):
-        """
-        :param permissionLevel: 命令总体权限，可为all, admin
-        """
-
     def _helper(self):
         """
         这玩意儿是给自带插件helper用的\n
@@ -118,4 +112,10 @@ class Plugin:
         :param event: 完整的事件参数，见官方文档 https://docs.go-cqhttp.org/event/#%E5%8A%A0%E7%BE%A4%E8%AF%B7%E6%B1%82-%E9%82%80%E8%AF%B7
         :return: None(如有消息请自行返回)
         """
+        ...
+
+    def on_load(self):
+        ...
+
+    def on_remove(self):
         ...

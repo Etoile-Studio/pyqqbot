@@ -14,6 +14,12 @@ import manager
 
 proc = subprocess.Popen(args="go-cqhttp.exe -faststart", shell=True, cwd=BOT_PATH,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+initFlag = True
+
+
+def initPlugin():
+    while initFlag: time.sleep(1)
+    manager.loadPlugins()
 
 
 def returnCommandResultGroup(rawMessage, event):
@@ -32,11 +38,13 @@ def returnCommandResultGroup(rawMessage, event):
 
 # 从服务器接收数据
 async def manage():
+    global initFlag
     while 1:
         try:
             # websocket 连接
             async with websockets.connect(f'ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}') as websocket:
                 LOGGER.info("连接成功")
+                initFlag = False
                 while 1:
                     # 处理原始数据
                     recv_event = await websocket.recv()
@@ -130,6 +138,6 @@ def exit1(signum, frame):
 
 
 if __name__ == "__main__":
-    manager.loadPlugins()
+    threading.Thread(target=initPlugin).start()
     signal.signal(signal.SIGINT, exit1)
     asyncio.run(manage())

@@ -23,6 +23,8 @@ def loadPlugins():
     global reloading
     reloading = True
     LOGGER.info("loading plugins")
+    for plugin in plugins["on_remove"]:
+        plugin()
     plugins = PLUGIN_LIST.copy()
     pluginDirs = removeMiscPath(os.listdir(PLUGIN_PATH))
     plugins["on_command"].append({"help": {"exec": helper, "helper": helperHelper, "permission": Permissions.member}})
@@ -58,9 +60,15 @@ def loadPlugins():
                     if plugin_class.on_group_anonymous_message != Plugin.on_group_anonymous_message:
                         plugins["on_group_anonymous_message"].append(initedPluginClass.on_group_anonymous_message)
 
+                    if plugin_class.on_remove != Plugin.on_remove:
+                        plugins["on_remove"].append(initedPluginClass.on_remove)
+
+                    initedPluginClass.on_load()
+
                     onCommands = getCommandListener(initedPluginClass)
                     for command in onCommands["exec"]:
                         name = command[0]
+                        # print(onCommands)
                         flag = True
                         for plug in plugins["on_command"]:
                             if name in plug.keys():
