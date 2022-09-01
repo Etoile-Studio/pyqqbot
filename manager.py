@@ -1,7 +1,8 @@
 import os
 import threading
 import time
-from importlib import import_module
+from copy import deepcopy
+import importlib
 
 from API.actions import cqcode
 from API.actions.group.message import sendGroupMessage
@@ -13,7 +14,7 @@ from API.plugin import Plugin, PluginHelpText
 from API.misc import removeMiscPath, getClasses, getCommandListener
 from command_spilter import splitCommand
 
-plugins = PLUGIN_LIST
+plugins = deepcopy(PLUGIN_LIST)
 reloading = False
 permissionName = ["member", "admin", "owner"]
 
@@ -25,7 +26,9 @@ def loadPlugins():
     LOGGER.info("loading plugins")
     for plugin in plugins["on_remove"]:
         plugin()
-    plugins = PLUGIN_LIST.copy()
+    LOGGER.debug(plugins)
+    LOGGER.debug(PLUGIN_LIST)
+    plugins = deepcopy(PLUGIN_LIST)
     pluginDirs = removeMiscPath(os.listdir(PLUGIN_PATH))
     plugins["on_command"].append({"help": {"exec": helper, "helper": helperHelper, "permission": Permissions.member}})
     plugins["on_command"].append({"setMemberPermission": {"exec": setMemberPermissionCommand,
@@ -37,7 +40,8 @@ def loadPlugins():
     plugins["on_command"].append({"reload": {"exec": reload, "helper": reloadHelper, "permission": Permissions.owner}})
     for pluginDir in pluginDirs:
         try:
-            plugin = import_module(f"{PLUGIN_PACKAGE}.{pluginDir}.main")
+            plugin = importlib.import_module(f"{PLUGIN_PACKAGE}.{pluginDir}.main")
+            importlib.reload(plugin)
             plugin_classes = getClasses(plugin)
             for plugin_class in plugin_classes:
                 if Plugin in plugin_class.__bases__:
